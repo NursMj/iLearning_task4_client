@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import AuthRegPage from './pages/AuthRegPage'
 import AdminPage from './pages/AdminPage'
 import Header from './components/Header'
+import './App.css'
 
 
 function App() {
