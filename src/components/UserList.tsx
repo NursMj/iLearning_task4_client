@@ -30,7 +30,7 @@ function UserList(props: any) {
                 return (
                     <tr 
                         key={u.id} 
-                        className={u.status == 'blocked' ? 'bg-blocked':''}
+                        style={u.status == 'blocked' ? {background: 'orange'}:{}}
                     >
                         <td><input 
                             type="checkbox" 
