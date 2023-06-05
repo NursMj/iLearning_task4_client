@@ -6,12 +6,13 @@ import UserObject from "../interfaces/UserObject"
 import axios from 'axios'
 
 
-function AdminPage() {
-
+function AdminPage(props: any) {
+  const {logOut,isLoading, setIsLoading} = props.props
   const [userList, setUserList] = useState<UserObject[]>([])
   const [selectedItems, setSelectedItems] = useState<number[]>([])
   const [selectAll, setSelectAll] = useState(false)
   const url = import.meta.env.VITE_API_URL + "users/"
+  const email = localStorage.getItem('email')
 
   function refreshTable() {
     fetchData(url)
@@ -38,18 +39,27 @@ function AdminPage() {
   }
 
   async function fetchData(url: string) {
+    setIsLoading(true)
     try {
-      const response = await axios.get(url)
+      const response = await axios.post(url, {email: email})
       const data = response.data
       setUserList(data)
-    } catch (err) {
-      console.log(err)
+    } catch (err: any) {
+      if (err.response && err.response.status === 403) {
+        alert(err.response.data.error)
+        logOut()
+      } else {
+        console.log(err)
+      }
     }
+    setIsLoading(false)
   }
 
   async function handleBlockAndUnblock(status: string) {
+    setIsLoading(true)
     try {
       await axios.put(url + 'update-status', {
+        email: email,
         userIds: selectedItems,
         status
       })
@@ -57,19 +67,22 @@ function AdminPage() {
     } catch (error) {
       console.error(error)
     }
+    setIsLoading(false)
   }
 
   async function handleDelete() {
+    setIsLoading(true)
     try {
       await axios.delete(url+`delete/`, {data: { userIds: selectedItems }})
       refreshTable()
     } catch (error) {
       console.error(error)
     }
+    setIsLoading(false)
   }
 
   useEffect(() => {
-    fetchData(url)
+    refreshTable()
   }, [])
 
   return (
@@ -84,6 +97,7 @@ function AdminPage() {
         handleSelectItem={handleSelectItem}
         selectAll={selectAll}
         selectedItems={selectedItems}
+        isLoading={isLoading}
       />
     </Container>
   )

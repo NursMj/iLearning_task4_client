@@ -1,19 +1,25 @@
 import { useState } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { Card, Form, Button, Alert, Container } from 'react-bootstrap'
 
-function AuthRegPage() {
+function AuthRegPage(props: any) {
+  const {setIsAuth, isLoading, setIsLoading} = props.props
   const location = useLocation()
   const isLogin = location.pathname === '/'
-
   const [userName, setUserName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const navigate = useNavigate()
+
+  function storeEmail() {
+    localStorage.setItem('email', email);
+  }
 
   async function handleLogin(e: any){
     e.preventDefault()
     if (password.length > 0 && email != '') {
+      setIsLoading(true)
       setError('')
       try {
         const response = await fetch(import.meta.env.VITE_API_URL + 'users/login', {
@@ -24,7 +30,9 @@ function AuthRegPage() {
         body: JSON.stringify({email: email, password: password}),
       })
       if (response.ok) {
-          window.location.href = "/admin"
+          setIsAuth(true)
+          storeEmail()
+          navigate('/admin')
         } else {
           const responseData = await response.json();
           setError(responseData.error);
@@ -33,6 +41,7 @@ function AuthRegPage() {
         setError('Sorry but something went wrong on the server side, please try again later')
         console.log(error)
       }
+      setIsLoading(false)
     } else {
       setError('Invalid email or password')
     }
@@ -42,8 +51,9 @@ function AuthRegPage() {
     e.preventDefault()
     if (password && userName) {
       setError('')
+      setIsLoading(true)
       try {
-        const response = await fetch(import.meta.env.VITE_API_URL+"users/", {
+        const response = await fetch(import.meta.env.VITE_API_URL+"users/registration", {
           method: "POST",
           headers: {"Content-Type": "application/json",},
           body: JSON.stringify({name: userName,email: email,password: password,}),
@@ -51,7 +61,7 @@ function AuthRegPage() {
         if(response.ok) {
           const responseData = await response.json();
           alert(responseData.message);
-          window.location.href = "/"
+          navigate('/')
         } else {
           const responseData = await response.json();
           setError(responseData.error);
@@ -60,6 +70,7 @@ function AuthRegPage() {
         setError('Sorry but something went wrong on the server side, please try again later')
         console.log(error);
       }
+      setIsLoading(false)
     } else {
       setError('Please enter a valid email and fill all fields')
     }
@@ -73,6 +84,7 @@ function AuthRegPage() {
         <Card.Body>
           <Card.Title>{isLogin ? 'LOGIN' : 'REGISTRATION'}</Card.Title>
           {error && <Alert variant="danger">{error}</Alert>}
+          {isLoading && <Alert variant="primary">Loading...</Alert>}
           <Form onSubmit={handleSubmit}>
             {!isLogin && 
               <Form.Group controlId="formUserName">
@@ -111,11 +123,11 @@ function AuthRegPage() {
               </Button>
               {isLogin ? 
                 <div>
-                  Don't have an account?  <NavLink to='/registration'>Sign up</NavLink>
+                  Don't have an account?  <NavLink onClick={()=> setError('')} to='/registration'>Sign up</NavLink>
                 </div>
                 :
                 <div>
-                  Have an account already?  <NavLink to='/'>Log in</NavLink>
+                  Have an account already?  <NavLink onClick={()=> setError('')} to='/'>Log in</NavLink>
                 </div>
               }
             </div>

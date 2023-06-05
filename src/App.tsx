@@ -1,47 +1,36 @@
-import { useState } from 'react'
-import { createBrowserRouter, Outlet, RouterProvider, Navigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import AuthRegPage from './pages/AuthRegPage'
 import AdminPage from './pages/AdminPage'
 import Header from './components/Header'
-import UserContext from './context/userContext'
 
-const Layout = () => {
-  return (
-    <div className='app'>
-      <Header />
-      <Outlet />
-    </div>
-  )
-}
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Layout />,
-    children: [
-      {
-        path: "/",
-        element: <AuthRegPage />,
-      },
-      {
-        path: "/registration",
-        element: <AuthRegPage />,
-      },
-      {
-        path: "/admin",
-        element: <AdminPage />,
-      },
-    ]
-  },
-])
 
 function App() {
-  const [isAuth, setIsAuth] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isAuth, setIsAuth] = useState(() => {
+    const storedIsAuth = localStorage.getItem('isAuth')
+    return storedIsAuth ? JSON.parse(storedIsAuth) : false
+  })
+
+  useEffect(() => {
+    localStorage.setItem('isAuth', JSON.stringify(isAuth))
+  }, [isAuth])
+
+  function logOut() {
+    setIsAuth(false)
+    localStorage.clear()
+  }
 
   return (
-    <UserContext.Provider value={isAuth}>
-      <RouterProvider router={router} />
-    </UserContext.Provider>
+    <BrowserRouter>
+      <Header props={{isAuth, logOut}}/>
+      <Routes>
+        {isAuth && <Route path='/admin' element={<AdminPage props={{logOut,isLoading, setIsLoading}}/>}/>}
+        <Route path="/registration" element={<AuthRegPage props={{isAuth, setIsAuth, isLoading, setIsLoading}}/>} />
+        <Route path="/" element={<AuthRegPage props={{isAuth, setIsAuth, isLoading, setIsLoading}}/>} />
+        <Route path='*' element={<Navigate to='/'/>} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

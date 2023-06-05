@@ -3,7 +3,7 @@ interface UserObject {
     first_name: string;
     email: string;
     createdAt: string;
-    updatedAt: string;
+    lastLogin: string;
     status: string;
 }
 
